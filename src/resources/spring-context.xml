@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.1.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.1.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.1.xsd
+       	http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.1.xsd">
+
+    <!--添加支持注解    上文文注释配置-->
+    <context:annotation-config/>
+    <!-- 扫描server 层包 --><!-- 上下文组件扫描 -->
+    <context:component-scan base-package="com.hskj"/>
+
+    <!--扫描properties配置文件  -->
+    <context:property-placeholder location="classpath:resources/config.properties"/>
+
+    <bean id="dataSource"
+          class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="${db.driverClassName}"/>
+        <property name="url" value="${db.url}"/>
+        <property name="username" value="${db.username}"/>
+        <property name="password" value="${db.password}"/>
+    </bean>
+
+    <!-- 配置hibernate的sessionFactory,并让spring的ioc进行管理 -->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+
+        <!--配置数据源  -->
+        <property name="dataSource" ref="dataSource"/>
+
+        <!-- 引入hibernate的属性配置文件 -->
+        <property name="configLocation" value="classpath:resources/hibernate.cfg.xml"/>
+
+        <!-- 扫描实体类,将其映射为具体的数据库表 -->
+        <property name="packagesToScan" value="com.hskj.*.entity"/>
+    </bean>
+
+
+    <!-- 配置事务管理,采用Hibernate4 -->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+
+
+    <!-- Hibernate 事务 配置事务传播属性,注意需要有事务管理(transaction-manager) : 其实就是事务(方法)发生的时间和要发生的故事-->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <!-- 拦截的是下段配置aop里设置的路径，即txPointcut中配置的路径 -->
+            <!-- 具体的propagation含义请自查 -->
+            <tx:method name="save*" propagation="REQUIRED"/>
+            <tx:method name="add*" propagation="REQUIRED"/>
+            <tx:method name="create*" propagation="REQUIRED"/>
+            <tx:method name="insert*" propagation="REQUIRED"/>
+            <tx:method name="update*" propagation="REQUIRED"/>
+            <tx:method name="merge*" propagation="REQUIRED"/>
+            <tx:method name="del*" propagation="REQUIRED"/>
+            <tx:method name="remove*" propagation="REQUIRED"/>
+            <tx:method name="put*" propagation="REQUIRED"/>
+            <tx:method name="use*" propagation="REQUIRED"/>
+            <!--hibernate4必须配置为开启事务 否则 getCurrentSession()获取不到 -->
+            <tx:method name="get*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="count*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="find*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="list*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="*" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--   配置事务切面,并关联事务的传播属性: 其实就是一个方法,只是这个方法是事务性的事务,它的发生不是随机的,而是具有时间,地点和该发生的故事的 -->
+    <aop:config>
+        <!--  切点: 其实就是告诉了地点   -->
+        <aop:pointcut expression="execution(* com.hskj..*(..))" id="pointCut"/>
+        <!-- 要执行那样的事务,那当然得需要通知,通知它什么时候发生,在哪里发生,发生啥事   -->
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="pointCut"/>
+    </aop:config>
+
+
+    <!-- spring AOP 的注解方式应该在mvc文件中配置-->
+    <!-- <aop:aspectj-autoproxy/>-->
+    <!-- 启用@AspectJ 支持 -->
+    <!--<bean class="org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator" />-->
+
+    <!-- 配置 Annotation 驱动，扫描@Transactional注解的类定义事务  -->
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+
+    <!-- 任务调度 -->
+    <task:annotation-driven/>
+
+
+    <!-- 文件上传的配置 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <!-- 指定所上传文件的总大小不能超过200KB。以B来计算。注意maxUploadSize属性的限制不是针对单个文件，而是所有文件的容量之和   -->
+        <property name="maxUploadSize" value="9999999999999"/>
+    </bean>
+
+    <!-- 该异常是SpringMVC在检查上传的文件信息时抛出来的，而且此时还没有进入到Controller方法中 -->
+    <bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+        <property name="exceptionMappings">
+            <props>
+                <!-- 遇到MaxUploadSizeExceededException异常时，自动跳转到WebContent目录下的error.jsp页面 -->
+                <prop key="org.springframework.web.multipart.MaxUploadSizeExceededException"/>
+            </props>
+        </property>
+    </bean>
+
+    <!--<import resource="classpath:spring-context-jedis.xml"/>-->
+
+
+</beans>

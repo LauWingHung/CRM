@@ -14,7 +14,7 @@
     <!--添加支持注解    上文文注释配置-->
     <context:annotation-config/>
     <!-- 扫描server 层包 --><!-- 上下文组件扫描 -->
-    <context:component-scan base-package="com.hskj"/>
+    <context:component-scan base-package="com.lau1yach.CRM"/>
 
     <!--扫描properties配置文件  -->
     <context:property-placeholder location="classpath:resources/config.properties"/>
@@ -28,7 +28,7 @@
     </bean>
 
     <!-- 配置hibernate的sessionFactory,并让spring的ioc进行管理 -->
-    <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
 
         <!--配置数据源  -->
         <property name="dataSource" ref="dataSource"/>
@@ -37,12 +37,12 @@
         <property name="configLocation" value="classpath:resources/hibernate.cfg.xml"/>
 
         <!-- 扫描实体类,将其映射为具体的数据库表 -->
-        <property name="packagesToScan" value="com.hskj.*.entity"/>
+        <property name="packagesToScan" value="com.lau1yach.CRM.entity"/>
     </bean>
 
 
     <!-- 配置事务管理,采用Hibernate4 -->
-    <bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+    <bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
         <property name="sessionFactory" ref="sessionFactory"/>
     </bean>
 
@@ -62,7 +62,7 @@
             <tx:method name="remove*" propagation="REQUIRED"/>
             <tx:method name="put*" propagation="REQUIRED"/>
             <tx:method name="use*" propagation="REQUIRED"/>
-            <!--hibernate4必须配置为开启事务 否则 getCurrentSession()获取不到 -->
+            <!--hibernate5必须配置为开启事务 否则 getCurrentSession()获取不到 -->
             <tx:method name="get*" propagation="REQUIRED" read-only="true"/>
             <tx:method name="count*" propagation="REQUIRED" read-only="true"/>
             <tx:method name="find*" propagation="REQUIRED" read-only="true"/>
@@ -74,7 +74,7 @@
     <!--   配置事务切面,并关联事务的传播属性: 其实就是一个方法,只是这个方法是事务性的事务,它的发生不是随机的,而是具有时间,地点和该发生的故事的 -->
     <aop:config>
         <!--  切点: 其实就是告诉了地点   -->
-        <aop:pointcut expression="execution(* com.hskj..*(..))" id="pointCut"/>
+        <aop:pointcut expression="execution(* com.lau1yach.CRM..*(..))" id="pointCut"/>
         <!-- 要执行那样的事务,那当然得需要通知,通知它什么时候发生,在哪里发生,发生啥事   -->
         <aop:advisor advice-ref="txAdvice" pointcut-ref="pointCut"/>
     </aop:config>

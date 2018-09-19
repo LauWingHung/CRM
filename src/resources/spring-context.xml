@@ -41,17 +41,19 @@
     </bean>
 
 
-    <!-- 配置事务管理,采用Hibernate4 -->
+    <!-- 配置事务管理,采用Hibernate5 -->
     <bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
         <property name="sessionFactory" ref="sessionFactory"/>
     </bean>
 
 
+
     <!-- Hibernate 事务 配置事务传播属性,注意需要有事务管理(transaction-manager) : 其实就是事务(方法)发生的时间和要发生的故事-->
-    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+    <!--<tx:advice id="txAdvice" transaction-manager="transactionManager">
         <tx:attributes>
-            <!-- 拦截的是下段配置aop里设置的路径，即txPointcut中配置的路径 -->
-            <!-- 具体的propagation含义请自查 -->
+            &lt;!&ndash; 拦截的是下段配置aop里设置的路径，即txPointcut中配置的路径 &ndash;&gt;
+            &lt;!&ndash; 具体的propagation含义请自查 &ndash;&gt;
             <tx:method name="save*" propagation="REQUIRED"/>
             <tx:method name="add*" propagation="REQUIRED"/>
             <tx:method name="create*" propagation="REQUIRED"/>
@@ -62,21 +64,21 @@
             <tx:method name="remove*" propagation="REQUIRED"/>
             <tx:method name="put*" propagation="REQUIRED"/>
             <tx:method name="use*" propagation="REQUIRED"/>
-            <!--hibernate5必须配置为开启事务 否则 getCurrentSession()获取不到 -->
+            &lt;!&ndash;hibernate5必须配置为开启事务 否则 getCurrentSession()获取不到 &ndash;&gt;
             <tx:method name="get*" propagation="REQUIRED" read-only="true"/>
             <tx:method name="count*" propagation="REQUIRED" read-only="true"/>
             <tx:method name="find*" propagation="REQUIRED" read-only="true"/>
             <tx:method name="list*" propagation="REQUIRED" read-only="true"/>
             <tx:method name="*" read-only="true"/>
         </tx:attributes>
-    </tx:advice>
+    </tx:advice>-->
 
     <!--   配置事务切面,并关联事务的传播属性: 其实就是一个方法,只是这个方法是事务性的事务,它的发生不是随机的,而是具有时间,地点和该发生的故事的 -->
     <aop:config>
         <!--  切点: 其实就是告诉了地点   -->
         <aop:pointcut expression="execution(* com.lau1yach.CRM..*(..))" id="pointCut"/>
         <!-- 要执行那样的事务,那当然得需要通知,通知它什么时候发生,在哪里发生,发生啥事   -->
-        <aop:advisor advice-ref="txAdvice" pointcut-ref="pointCut"/>
+        <!--<aop:advisor advice-ref="txAdvice" pointcut-ref="pointCut"/>-->
     </aop:config>
 
 
